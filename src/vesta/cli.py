@@ -7,7 +7,7 @@ import click
 
 from vesta.board import send_to_board
 from vesta.formatter import board_to_text, format_for_board
-from vesta.prices import fetch_prices
+from vesta.prices import RateLimitError, fetch_prices
 
 DEFAULT_SYMBOLS = ["BTC-USD", "GLD", "GOOG"]
 
@@ -72,6 +72,10 @@ def main(symbols: str, api_key: str | None, dry_run: bool) -> None:
     click.echo(f"Fetching prices for: {', '.join(symbol_list)}")
     try:
         prices = fetch_prices(symbol_list)
+    except RateLimitError as e:
+        click.echo(f"Rate limited: {e}", err=True)
+        click.echo("Board not updated.", err=True)
+        sys.exit(0)  # Exit gracefully, don't update board
     except Exception as e:
         click.echo(f"Error fetching prices: {e}", err=True)
         sys.exit(1)
