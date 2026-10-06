@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "vestaboard>=1.0.0",
-    "yfinance==0.2.54",
+    "yfinance>=1.7,<2",
     "click>=8.0.0",
 ]
 

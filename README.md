@@ -1,92 +1,90 @@
-# vesta
+# Vesta
 
-Display crypto and equity prices on your Vestaboard.
+Display equity and crypto daily closing prices on your Vestaboard, with a color
+square on the right: green for positive changes, red for negative changes, and
+black when the displayed change rounds to `0.0%`.
 
-## Installation
+## Install
+
+Install with [uv](https://docs.astral.sh/uv/guides/tools/) and Python 3.10 or newer:
 
 ```bash
-# Install as a uv tool (recommended)
 uv tool install git+https://github.com/akan72/vesta
-
-# Or run directly without installing
-uvx --from git+https://github.com/akan72/vesta vesta
-
-# Or install from local source
-uv tool install .
+vesta --help
 ```
 
-## Setup
-
-1. Get your Vestaboard Read/Write API key from [web.vestaboard.com](https://web.vestaboard.com). 
-    - You need to have "Owner" access in the Vetaboard org to obtain the API key.
-2. Set the environment variable:
+For a local checkout, an editable installation follows source changes after a
+`git pull`:
 
 ```bash
-export VESTABOARD_RW_KEY="your-api-key-here"
+uv tool install --editable .
 ```
 
-## Usage
+For an existing non-editable local installation, refresh it after pulling:
 
 ```bash
-# Display default symbols (BTC, GLD, GOOG)
-vesta
+uv tool install --reinstall .
+```
 
-# Display custom symbols
-vesta --symbols AAPL,MSFT,NVDA,TSLA
+## Preview
 
-# Preview without sending to Vestaboard
+Preview in the terminal or open a local HTML rendering. Neither requires board
+credentials or sends anything to Vestaboard:
+
+```bash
 vesta --dry-run
-
-# Set symbols via environment variable
-export VESTA_SYMBOLS="SPY,QQQ,IWM"
-vesta
+vesta --dry-run --symbols AAPL,MSFT,NVDA
+vesta --preview
 ```
 
-## Symbols
-
-Use any valid Yahoo Finance symbol:
-
-- **Crypto**: `BTC-USD`, `ETH-USD`, `SOL-USD`
-- **Stocks**: `AAPL`, `GOOG`, `MSFT`, `NVDA`
-- **ETFs**: `SPY`, `QQQ`, `GLD`, `SLV`
-- **Futures**: `GC=F` (Gold), `CL=F` (Oil)
-
-Maximum 6 symbols can be displayed (one per row).
-
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `VESTABOARD_RW_KEY` | Required. Your Vestaboard Read/Write API key |
-| `VESTA_SYMBOLS` | Optional. Comma-separated list of symbols (default: BTC-USD,GLD,GOOG) |
-
-## Display Format
-
-Each row shows:
-- Symbol (6 characters)
-- Current price
-- Daily change percentage
-- A color square in the far-right cell: green for a positive change, red for a
-  negative change, and black when the displayed percentage rounds to `0.0%`.
-  The signed percentage remains visible alongside the color.
-
-Example:
-```
-BTC     $97,500 +2.3% 🟩
-GLD        $245 -0.5% 🟥
-GOOG       $192 +0.0% ⬛
-```
-
-Terminal previews add a space before each square for readability.
-Color squares represent one physical board cell each; their width in a terminal
-depends on the terminal's emoji font. Prices and percentages that cannot fit
-alongside the color cell cause an error without updating the board.
-
-Run the formatter tests without fetching quotes or contacting Vestaboard:
+For a headless session, save the HTML without opening a browser:
 
 ```bash
-python -m unittest discover -s tests -v
+vesta --preview-file preview.html
 ```
+
+If Yahoo Finance rate-limits a preview, Vesta automatically uses fixed BTC, GLD,
+and GOOG sample values. Both the terminal and HTML label them as demo data. Other
+fetch failures produce an error instead of sample data.
+
+To preview the sample layout offline:
+
+```bash
+vesta --demo
+vesta --demo --preview
+```
+
+Demo mode always previews, and uses its fixed sample symbols regardless of
+`--symbols`. It never sends sample prices to the board.
+
+## Send
+
+Vesta sends through the Vestaboard Python SDK using your Read/Write API key:
+
+```bash
+export VESTABOARD_RW_KEY="your-read-write-api-key"
+vesta
+vesta --symbols AAPL,MSFT,NVDA
+```
+
+You can also supply the key with `--api-key`. A normal send fetches fresh prices;
+if Yahoo rate-limits or any quote is unavailable, Vesta exits nonzero without
+updating the board.
+
+## Symbols and prices
+
+Supply one to six unique Yahoo Finance symbols with `--symbols` / `-s` or
+`VESTA_SYMBOLS`. Defaults: `BTC-USD,GLD,GOOG`. Use USD-denominated instruments;
+prices have a dollar sign and Vesta does not convert currencies.
+
+Quotes are the latest available adjusted daily closes and changes from the
+preceding closes, not streaming prices. Five days of history allow for
+non-trading days. Missing quotes are never displayed as fabricated zero prices.
+
+Ticker names are limited to six characters; crypto's `-USD` suffix is removed.
+The rightmost board cell contains the color square. Terminal previews add a space
+before the square for readability. If the price or percentage cannot fit, the
+command reports an error without updating the board.
 
 ## License
 
