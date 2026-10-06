@@ -81,7 +81,11 @@ def main(symbols: str, api_key: str | None, dry_run: bool) -> None:
         sys.exit(1)
 
     # Format for board
-    board = format_for_board(prices)
+    try:
+        board = format_for_board(prices)
+    except ValueError as e:
+        click.echo(f"Error formatting board: {e}", err=True)
+        sys.exit(1)
 
     # Preview
     click.echo("\nBoard preview:")
