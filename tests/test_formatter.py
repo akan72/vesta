@@ -29,7 +29,7 @@ class PriceChangeColorTests(unittest.TestCase):
                 self.assertTrue(all(len(row) == 22 for row in board))
                 self.assertEqual(board[0][-1], color)
                 preview = board_to_text(board).splitlines()
-                self.assertTrue(preview[0].endswith(percentage + square))
+                self.assertTrue(preview[0].endswith(percentage + " " + square))
                 self.assertIn("BTC", preview[0])
                 self.assertIn("$97,500", preview[0])
                 self.assertTrue(all(row == [0] * 22 for row in board[1:]))
@@ -68,9 +68,9 @@ class PriceChangeColorTests(unittest.TestCase):
         ):
             result = CliRunner().invoke(main, ["--dry-run"])
         self.assertEqual(result.exit_code, 0, result.output)
-        self.assertIn("+2.3%🟩", result.output)
-        self.assertIn("-0.5%🟥", result.output)
-        self.assertIn("+0.0%⬛", result.output)
+        self.assertIn("+2.3% 🟩", result.output)
+        self.assertIn("-0.5% 🟥", result.output)
+        self.assertIn("+0.0% ⬛", result.output)
         send.assert_not_called()
 
     def test_oversized_fields_fail_cleanly_without_sending(self):

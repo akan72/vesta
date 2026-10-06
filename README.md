@@ -72,11 +72,12 @@ Each row shows:
 
 Example:
 ```
-BTC     $97,500 +2.3%🟩
-GLD        $245 -0.5%🟥
-GOOG       $192 +0.0%⬛
+BTC     $97,500 +2.3% 🟩
+GLD        $245 -0.5% 🟥
+GOOG       $192 +0.0% ⬛
 ```
 
+Terminal previews add a space before each square for readability.
 Color squares represent one physical board cell each; their width in a terminal
 depends on the terminal's emoji font. Prices and percentages that cannot fit
 alongside the color cell cause an error without updating the board.

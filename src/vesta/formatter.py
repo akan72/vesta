@@ -138,7 +138,7 @@ def board_to_text(board: list[list[int]]) -> str:
     # Reverse mapping
     code_to_char = {v: k for k, v in CHAR_CODES.items()}
     code_to_char[0] = " "  # Ensure space is correct
-    code_to_char.update(COLOR_CHARS)
+    code_to_char.update({code: f" {char}" for code, char in COLOR_CHARS.items()})
 
     lines = []
     for row in board:
