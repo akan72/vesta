@@ -18,6 +18,12 @@ CHAR_CODES = {
 ROWS = 6
 COLS = 22
 
+# Vestaboard color chips; each occupies one physical cell.
+RED = 63
+GREEN = 66
+BLACK = 70
+COLOR_CHARS = {RED: "🟥", GREEN: "🟩", BLACK: "⬛"}
+
 
 def text_to_codes(text: str) -> list[int]:
     """Convert a text string to Vestaboard character codes."""
@@ -49,31 +55,41 @@ def format_price(price: float) -> str:
 
 def format_change(change_percent: float) -> str:
     """Format a change percentage for display."""
+    change_percent = round(change_percent, 1)
+    if change_percent == 0:
+        change_percent = 0.0  # Avoid displaying negative zero.
     sign = "+" if change_percent >= 0 else ""
     return f"{sign}{change_percent:.1f}%"
+
+
+def change_color(change_percent: float) -> int:
+    """Match the color to the displayed percentage, including rounded zero."""
+    displayed_change = round(change_percent, 1)
+    if displayed_change > 0:
+        return GREEN
+    if displayed_change < 0:
+        return RED
+    return BLACK
 
 
 def format_row(price_data: PriceData) -> str:
     """Format a single price row for the Vestaboard.
 
-    Format: SYMBOL    PRICE  CHANGE
-    Example: BTC    $97,500   +2.3%
-    Total width: 22 characters
+    Format: SYMBOL    PRICE  CHANGE [color cell]
+    The last of the 22 cells is reserved for the color chip.
     """
     symbol = price_data.symbol[:6].ljust(6)  # 6 chars, left-aligned
     price_str = format_price(price_data.price)
     change_str = format_change(price_data.change_percent)
 
-    # Calculate spacing: 22 total - 6 symbol - len(price) - len(change)
-    # We want price centered-ish and change right-aligned
-    middle_section = f"{price_str:>9}"  # 9 chars for price, right-aligned
+    middle_section = f"{price_str:>8}"  # 8 chars for price, right-aligned
     right_section = f"{change_str:>6}"  # 6 chars for change, right-aligned
 
-    row = f"{symbol} {middle_section}{right_section}"
+    row = f"{symbol} {middle_section}{right_section} "
 
     # Ensure exactly 22 characters
     if len(row) > COLS:
-        row = row[:COLS]
+        raise ValueError("Price and percentage do not fit alongside the color chip.")
     elif len(row) < COLS:
         row = row.ljust(COLS)
 
@@ -95,6 +111,7 @@ def format_for_board(prices: list[PriceData]) -> list[list[int]]:
         if i < len(prices):
             row_text = format_row(prices[i])
             row_codes = text_to_codes(row_text)
+            row_codes[-1] = change_color(prices[i].change_percent)
         else:
             # Empty row
             row_codes = [0] * COLS
@@ -121,6 +138,7 @@ def board_to_text(board: list[list[int]]) -> str:
     # Reverse mapping
     code_to_char = {v: k for k, v in CHAR_CODES.items()}
     code_to_char[0] = " "  # Ensure space is correct
+    code_to_char.update(COLOR_CHARS)
 
     lines = []
     for row in board:

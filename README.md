@@ -66,12 +66,25 @@ Each row shows:
 - Symbol (6 characters)
 - Current price
 - Daily change percentage
+- A color square in the far-right cell: green for a positive change, red for a
+  negative change, and black when the displayed percentage rounds to `0.0%`.
+  The signed percentage remains visible alongside the color.
 
 Example:
 ```
-BTC    $97,500   +2.3%
-GLD       $245   -0.5%
-GOOG      $192   +1.2%
+BTC     $97,500 +2.3%🟩
+GLD        $245 -0.5%🟥
+GOOG       $192 +0.0%⬛
+```
+
+Color squares represent one physical board cell each; their width in a terminal
+depends on the terminal's emoji font. Prices and percentages that cannot fit
+alongside the color cell cause an error without updating the board.
+
+Run the formatter tests without fetching quotes or contacting Vestaboard:
+
+```bash
+python -m unittest discover -s tests -v
 ```
 
 ## License
