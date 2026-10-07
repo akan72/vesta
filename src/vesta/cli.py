@@ -68,7 +68,7 @@ def main(
     \b
     Sending live data to your board requires a Vestaboard API key.
     Local preview mode doesn't require an API key. You can also preview
-    the expected output using synthetic data, which is also used if you get
+    the expected output using synthetic data, which is used if you get
     rate limited by the market data provider.
 
     Examples:
