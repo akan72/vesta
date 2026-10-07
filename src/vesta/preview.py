@@ -1,6 +1,5 @@
 """A self-contained HTML rendering of the exact board payload."""
 
-from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 
@@ -35,31 +34,21 @@ def render_preview(rows: list[list[int]], *, demo: bool = False) -> str:
             else:
                 char = escape(characters[code])
                 cells.append(f'<span class="tile">{char}</span>')
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     text = escape(board_to_text(rows))
-    description = (
-        "Sample prices for layout testing. These are not live quotes."
-        if demo
-        else "Inspect the layout before sending it to your Vestaboard."
-    )
+    title = "Vesta — Demo" if demo else "Vesta"
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vesta — Board preview</title>
+<title>{title}</title>
 <style>
 * {{ box-sizing: border-box; }}
 body {{ margin:0; min-height:100vh; background:#eeeae2; color:#252720;
  font-family:system-ui,sans-serif; padding:clamp(24px,6vw,88px); }}
 main {{ max-width:1120px; margin:auto; }}
-header {{ display:flex; justify-content:space-between; align-items:center; gap:20px; }}
-.brand {{ font-size:15px; font-weight:750; letter-spacing:.2em; text-transform:uppercase; }}
-.badge {{ font-size:12px; border:1px solid #bdc6b7; background:#e3e8df;
- padding:8px 12px; border-radius:20px; white-space:nowrap; }}
-h1 {{ font-family:Georgia,serif; font-size:clamp(32px,5vw,58px); font-weight:400;
- letter-spacing:-.035em; margin:60px 0 14px; }}
-p {{ color:#62655c; line-height:1.6; }}
+h1 {{ font-size:15px; font-weight:750; letter-spacing:.2em;
+ text-transform:uppercase; margin:0; }}
 .board {{ display:grid; grid-template-columns:repeat(22,minmax(0,1fr));
  gap:clamp(2px,.45vw,6px); padding:clamp(10px,2vw,26px); background:#111210;
  border-radius:12px; border:1px solid #383a33; box-shadow:0 20px 40px #25272022;
@@ -70,21 +59,16 @@ p {{ color:#62655c; line-height:1.6; }}
  font-size:clamp(9px,2.3vw,30px); font-weight:600; box-shadow:inset 0 0 0 1px #34362f; }}
 .tile::after {{ content:""; position:absolute; left:0; right:0; top:50%;
  border-top:1px solid #090a08; opacity:.75; }}
-.meta {{ display:flex; justify-content:space-between; gap:16px; color:#74776d;
- font-size:12px; border-bottom:1px solid #d6d5cc; padding-bottom:24px; }}
 details {{ margin-top:28px; color:#62655c; font-size:13px; }}
 summary {{ cursor:pointer; }}
 pre {{ overflow:auto; padding:20px; background:#e4e1d8; line-height:1.8; }}
 </style>
 </head>
 <body><main>
-<header><span class="brand">Vesta</span><span class="badge">Preview · board unchanged</span></header>
-<h1>Your next board.</h1>
-<p>{description}</p>
+<h1>{title}</h1>
 <div class="board" role="img" aria-label="Vestaboard preview: {escape(board_to_text(rows), quote=True)}">
 {"".join(cells)}
 </div>
-<div class="meta"><span>{timestamp}</span></div>
 <details><summary>Text view</summary><pre>{text}</pre></details>
 </main></body>
 </html>
