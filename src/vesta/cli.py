@@ -13,7 +13,7 @@ from vesta.prices import PriceData, PriceFetchError, RateLimitError, fetch_price
 
 DEFAULT_SYMBOLS = ["BTC-USD", "GLD", "GOOG"]
 DEMO_PRICES = [
-    PriceData("BTC", 36.79, 2.8),
+    PriceData("BTC", 83_436, 2.8),
     PriceData("SPCX", 169, 1.7),
     PriceData("GLD", 377, -1.5),
     PriceData("GOOG", 343, -0.5),

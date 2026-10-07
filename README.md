@@ -62,6 +62,7 @@ Demo mode always previews, and uses its fixed sample symbols regardless of
 `--symbols`. It never sends sample prices to the board.
 The six rows show three green squares (BTC, SPCX, META), two red squares (GLD,
 GOOG), and one black square (VTI).
+Bitcoin's fixed sample price is $83,436, displayed as BTC.
 
 ![Six-instrument demo board](docs/demo-preview.png)
 
