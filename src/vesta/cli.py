@@ -66,10 +66,11 @@ def main(
     """Display the prices of stocks and crypto on your Vestaboard!
 
     \b
-    Sending live data to your board requires a Vestaboard API key.
+    Sending market data to your board requires a Vestaboard API key.
     Local preview mode doesn't require an API key. You can also preview
-    the expected output using synthetic data, which is used if you get
-    rate limited by the market data provider.
+    the expected output using synthetic data.
+    Synthetic data is used automatically in local previews if the market
+    data provider rate-limits you.
 
     Examples:
 
