@@ -13,22 +13,31 @@ from vesta.prices import PriceData, PriceFetchError, RateLimitError, fetch_price
 
 DEFAULT_SYMBOLS = ["BTC-USD", "GLD", "GOOG"]
 DEMO_PRICES = [
-    PriceData("BTC", 97500, 2.3),
-    PriceData("GLD", 245, -0.5),
-    PriceData("GOOG", 192, 0.0),
+    PriceData("BTC", 36.79, 2.8),
+    PriceData("SPCX", 169, 1.7),
+    PriceData("GLD", 377, -1.5),
+    PriceData("GOOG", 343, -0.5),
+    PriceData("META", 723, 2.1),
+    PriceData("VTI", 380, 0.0),
 ]
 
 
-@click.command()
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "--symbols",
     "-s",
     envvar="VESTA_SYMBOLS",
     default=",".join(DEFAULT_SYMBOLS),
+    show_default=True,
+    show_envvar=True,
     help="Comma-separated Yahoo Finance symbols (1–6).",
 )
 @click.option(
-    "--api-key", "-k", envvar="VESTABOARD_RW_KEY", help="Vestaboard Read/Write API key."
+    "--api-key",
+    "-k",
+    envvar="VESTABOARD_RW_KEY",
+    show_envvar=True,
+    help="Vestaboard Read/Write API key; required only when sending.",
 )
 @click.option(
     "--dry-run", "-d", is_flag=True, help="Print the board without sending it."
@@ -42,7 +51,9 @@ DEMO_PRICES = [
     help="Write an HTML preview without opening a browser or sending.",
 )
 @click.option(
-    "--demo", is_flag=True, help="Preview fixed sample prices offline; never sends."
+    "--demo",
+    is_flag=True,
+    help="Preview six fixed sample instruments offline; never sends.",
 )
 def main(
     symbols: str,
@@ -52,15 +63,44 @@ def main(
     preview_file: Path | None,
     demo: bool,
 ) -> None:
-    """Display daily closing prices on a Vestaboard.
+    """Display the prices of stocks and crypto on your Vestaboard!
 
-    vesta --dry-run      Preview in your terminal.
+    \b
+    Sending market data to your board requires a Vestaboard API key.
+    Local preview mode doesn't require an API key. You can also preview
+    the expected output using synthetic data.
+    Synthetic data is used automatically in local previews if the market
+    data provider rate-limits you.
 
-    vesta --preview      Preview in your browser.
+    Examples:
 
-    vesta --demo         Preview offline sample data.
+    \b
+      Send the default instruments:
+        vesta
 
-    vesta                Fetch fresh prices and send to your board.
+    \b
+      Send selected instruments:
+        vesta --symbols BTC,SPCX,GLD,GOOG,META,VTI
+
+    \b
+      Preview selected instruments in the terminal:
+        vesta --dry-run --symbols AAPL,MSFT,NVDA
+
+    \b
+      Open a visual preview of selected instruments:
+        vesta --preview --symbols BTC,GLD,GOOG
+
+    \b
+      Save an HTML preview to a path without opening a browser:
+        vesta --symbols GLD,GOOG --preview-file /tmp/vesta-preview.html
+
+    \b
+      Preview all six demo instruments offline:
+        vesta --demo --preview
+
+    \b
+      Save an offline demo preview (quote paths containing spaces):
+        vesta --demo --preview-file "./board preview.html"
     """
     preview_only = dry_run or preview or preview_file is not None or demo
     symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
@@ -93,7 +133,8 @@ def main(
                 f"Error fetching prices: {exc}. Board not updated."
             ) from exc
     if use_demo:
-        click.echo("Demo: fixed BTC, GLD, GOOG sample values, not live quotes.")
+        demo_symbols = ", ".join(price.symbol for price in DEMO_PRICES)
+        click.echo(f"Demo: fixed {demo_symbols} sample values, not live quotes.")
         prices = DEMO_PRICES
 
     try:
