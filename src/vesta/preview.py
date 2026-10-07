@@ -41,13 +41,15 @@ def render_preview(rows: list[list[int]], *, demo: bool = False) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title}</title>
+<title>Vesta — {title}</title>
 <style>
 * {{ box-sizing: border-box; }}
 body {{ margin:0; min-height:100vh; background:#eeeae2; color:#252720;
  font-family:system-ui,sans-serif; padding:clamp(24px,6vw,88px); }}
 main {{ max-width:1120px; margin:auto; }}
-h1 {{ font-size:15px; font-weight:750; margin:0; }}
+.brand {{ font-size:15px; font-weight:750; letter-spacing:.2em; text-transform:uppercase; }}
+h1 {{ font-family:Georgia,serif; font-size:clamp(32px,5vw,58px); font-weight:400;
+ letter-spacing:-.035em; margin:60px 0 14px; }}
 .board {{ display:grid; grid-template-columns:repeat(22,minmax(0,1fr));
  gap:clamp(2px,.45vw,6px); padding:clamp(10px,2vw,26px); background:#111210;
  border-radius:12px; border:1px solid #383a33; box-shadow:0 20px 40px #25272022;
@@ -64,6 +66,7 @@ pre {{ overflow:auto; padding:20px; background:#e4e1d8; line-height:1.8; }}
 </style>
 </head>
 <body><main>
+<header><span class="brand">Vesta</span></header>
 <h1>{title}</h1>
 <div class="board" role="img" aria-label="Vestaboard preview: {escape(board_to_text(rows), quote=True)}">
 {"".join(cells)}
