@@ -1,15 +1,22 @@
 """CLI entry point for Vesta."""
 
-import os
-import sys
+import tempfile
+import webbrowser
+from pathlib import Path
 
 import click
 
 from vesta.board import send_to_board
 from vesta.formatter import board_to_text, format_for_board
-from vesta.prices import RateLimitError, fetch_prices
+from vesta.preview import write_preview
+from vesta.prices import PriceData, PriceFetchError, RateLimitError, fetch_prices
 
 DEFAULT_SYMBOLS = ["BTC-USD", "GLD", "GOOG"]
+DEMO_PRICES = [
+    PriceData("BTC", 97500, 2.3),
+    PriceData("GLD", 245, -0.5),
+    PriceData("GOOG", 192, 0.0),
+]
 
 
 @click.command()
@@ -18,92 +25,111 @@ DEFAULT_SYMBOLS = ["BTC-USD", "GLD", "GOOG"]
     "-s",
     envvar="VESTA_SYMBOLS",
     default=",".join(DEFAULT_SYMBOLS),
-    help="Comma-separated list of Yahoo Finance symbols (max 6)",
+    help="Comma-separated Yahoo Finance symbols (1–6).",
 )
 @click.option(
-    "--api-key",
-    "-k",
-    envvar="VESTABOARD_RW_KEY",
-    help="Vestaboard Read/Write API key",
+    "--api-key", "-k", envvar="VESTABOARD_RW_KEY", help="Vestaboard Read/Write API key."
 )
 @click.option(
-    "--dry-run",
-    "-d",
-    is_flag=True,
-    help="Preview the board without sending to Vestaboard",
+    "--dry-run", "-d", is_flag=True, help="Print the board without sending it."
 )
-def main(symbols: str, api_key: str | None, dry_run: bool) -> None:
-    """Display equity and crypto prices on a Vestaboard.
+@click.option(
+    "--preview", is_flag=True, help="Open a local visual preview without sending."
+)
+@click.option(
+    "--preview-file",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help="Write an HTML preview without opening a browser or sending.",
+)
+@click.option(
+    "--demo", is_flag=True, help="Preview fixed sample prices offline; never sends."
+)
+def main(
+    symbols: str,
+    api_key: str | None,
+    dry_run: bool,
+    preview: bool,
+    preview_file: Path | None,
+    demo: bool,
+) -> None:
+    """Display daily closing prices on a Vestaboard.
 
-    Fetches current prices from Yahoo Finance and displays them on your
-    Vestaboard. Each symbol shows the current price and daily change percentage.
+    vesta --dry-run      Preview in your terminal.
 
-    Examples:
+    vesta --preview      Preview in your browser.
 
-        vesta                          # Use defaults (BTC, GLD, GOOG)
+    vesta --demo         Preview offline sample data.
 
-        vesta -s AAPL,MSFT,NVDA        # Custom symbols
-
-        vesta --dry-run                # Preview without sending
-
-        VESTA_SYMBOLS=SPY,QQQ vesta    # Via environment variable
+    vesta                Fetch fresh prices and send to your board.
     """
-    # Parse symbols
-    symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
-
-    if not symbol_list:
-        click.echo("Error: No symbols provided", err=True)
-        sys.exit(1)
-
-    if len(symbol_list) > 6:
-        click.echo("Warning: Only first 6 symbols will be displayed", err=True)
-        symbol_list = symbol_list[:6]
-
-    # Check for API key if not dry run
-    if not dry_run and not api_key:
-        click.echo(
-            "Error: VESTABOARD_RW_KEY environment variable or --api-key required",
-            err=True,
+    preview_only = dry_run or preview or preview_file is not None or demo
+    symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+    if not 1 <= len(symbol_list) <= 6:
+        raise click.UsageError("Provide between 1 and 6 symbols.")
+    if len(set(symbol_list)) != len(symbol_list):
+        raise click.UsageError("Provide each symbol only once.")
+    if not preview_only and not api_key:
+        raise click.ClickException(
+            "Set VESTABOARD_RW_KEY or use --dry-run / --preview."
         )
-        click.echo("Get your API key at https://web.vestaboard.com", err=True)
-        sys.exit(1)
 
-    # Fetch prices
-    click.echo(f"Fetching prices for: {', '.join(symbol_list)}")
-    try:
-        prices = fetch_prices(symbol_list)
-    except RateLimitError as e:
-        click.echo(f"Rate limited: {e}", err=True)
-        click.echo("Board not updated.", err=True)
-        sys.exit(0)  # Exit gracefully, don't update board
-    except Exception as e:
-        click.echo(f"Error fetching prices: {e}", err=True)
-        sys.exit(1)
+    use_demo = demo
+    if not use_demo:
+        click.echo(f"Fetching daily closes for: {', '.join(symbol_list)}")
+        try:
+            prices = fetch_prices(symbol_list)
+        except RateLimitError as exc:
+            if not preview_only:
+                raise click.ClickException(f"{exc} Board not updated.") from exc
+            click.echo(
+                "Yahoo Finance rate limited the request; using demo data for this preview.",
+                err=True,
+            )
+            use_demo = True
+        except PriceFetchError as exc:
+            raise click.ClickException(f"{exc} Board not updated.") from exc
+        except Exception as exc:
+            raise click.ClickException(
+                f"Error fetching prices: {exc}. Board not updated."
+            ) from exc
+    if use_demo:
+        click.echo("Demo: fixed BTC, GLD, GOOG sample values, not live quotes.")
+        prices = DEMO_PRICES
 
-    # Format for board
     try:
         board = format_for_board(prices)
-    except ValueError as e:
-        click.echo(f"Error formatting board: {e}", err=True)
-        sys.exit(1)
+    except ValueError as exc:
+        raise click.ClickException(f"Cannot format board: {exc}") from exc
 
-    # Preview
-    click.echo("\nBoard preview:")
-    click.echo("-" * 22)
+    click.echo("\nBoard preview:\n" + "─" * 22)
     click.echo(board_to_text(board))
-    click.echo("-" * 22)
-
-    # Send to board
-    if dry_run:
-        click.echo("\nDry run - not sending to Vestaboard")
-    else:
-        click.echo("\nSending to Vestaboard...")
+    click.echo("─" * 22)
+    if preview or preview_file:
         try:
-            send_to_board(board, api_key)
-            click.echo("Done!")
-        except Exception as e:
-            click.echo(f"Error sending to board: {e}", err=True)
-            sys.exit(1)
+            if preview_file is None:
+                with tempfile.NamedTemporaryFile(
+                    prefix="vesta-", suffix=".html", delete=False
+                ) as output:
+                    preview_file = Path(output.name)
+            write_preview(board, preview_file, demo=use_demo)
+            click.echo(f"HTML preview: {preview_file.resolve()}")
+            if preview and not webbrowser.open(preview_file.resolve().as_uri()):
+                click.echo(
+                    "Could not open a browser; open the HTML preview file manually.",
+                    err=True,
+                )
+        except OSError as exc:
+            raise click.ClickException(f"Cannot save preview: {exc}") from exc
+
+    if preview_only:
+        click.echo("\nPreview only — board not updated.")
+        return
+    click.echo("\nSending to Vestaboard...")
+    try:
+        send_to_board(board, api_key)
+    except Exception as exc:
+        raise click.ClickException(f"Error sending to board: {exc}") from exc
+    click.echo("Sent to Vestaboard.")
 
 
 if __name__ == "__main__":
