@@ -30,7 +30,7 @@ DEMO_PRICES = [
     default=",".join(DEFAULT_SYMBOLS),
     show_default=True,
     show_envvar=True,
-    help="Comma-separated Yahoo Finance symbols (1–6).",
+    help="yfinance tickers (1–6); Bitcoin: BTC-USD.",
 )
 @click.option(
     "--api-key",
@@ -72,6 +72,8 @@ def main(
     Synthetic data is used automatically in local previews if the market
     data provider rate-limits you.
 
+    Symbols currently use yfinance's Yahoo Finance ticker format.
+
     Examples:
 
     \b
@@ -80,7 +82,7 @@ def main(
 
     \b
       Send selected instruments:
-        vesta --symbols BTC,SPCX,GLD,GOOG,META,VTI
+        vesta --symbols BTC-USD,SPCX,GLD,GOOG,META,VTI
 
     \b
       Preview selected instruments in the terminal:
@@ -88,7 +90,7 @@ def main(
 
     \b
       Open a visual preview of selected instruments:
-        vesta --preview --symbols BTC,GLD,GOOG
+        vesta --preview --symbols BTC-USD,SPCX,GLD,GOOG,META,VTI
 
     \b
       Save an HTML preview to a path without opening a browser:

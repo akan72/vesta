@@ -64,6 +64,17 @@ The six rows show three green squares (BTC, SPCX, META), two red squares (GLD,
 GOOG), and one black square (VTI).
 Bitcoin's fixed sample price is $83,436, displayed as BTC.
 
+For a market-data preview of the same six instruments, use Bitcoin's Yahoo
+Finance symbol `BTC-USD`:
+
+```bash
+vesta --preview --symbols BTC-USD,SPCX,GLD,GOOG,META,VTI
+```
+
+`BTC` alone is an ETF ticker, not Bitcoin. Both display as BTC on the board.
+Without `--symbols`, Vesta uses its three default instruments: BTC-USD, GLD,
+and GOOG. `--demo` always uses six fixed sample rows.
+
 ![Six-instrument demo board](docs/demo-preview.png)
 
 ## Send
@@ -82,15 +93,29 @@ updating the board.
 
 ## Symbols and prices
 
-Supply one to six unique Yahoo Finance symbols with `--symbols` / `-s` or
-`VESTA_SYMBOLS`. Defaults: `BTC-USD,GLD,GOOG`. Use USD-denominated instruments;
-prices have a dollar sign and Vesta does not convert currencies.
+For now, Vesta fetches market data through `yfinance`. Inputs to `--symbols` /
+`-s` or `VESTA_SYMBOLS` must use Yahoo Finance ticker syntax, with one to six
+unique tickers. Defaults: `BTC-USD,GLD,GOOG`. Bitcoin is `BTC-USD`; `BTC` is
+a separate ETF ticker.
+
+Use USD-denominated instruments; prices have a dollar sign and Vesta does
+not convert currencies or validate the quote currency returned by the provider.
 
 Quotes are the latest available adjusted daily closes and changes from the
 preceding closes, not streaming prices. Five days of history allow for
 non-trading days. Missing quotes are never displayed as fabricated zero prices.
 
-Ticker names are limited to six characters; crypto's `-USD` suffix is removed.
+The complete input ticker is passed unchanged to yfinance. For display only,
+Vesta removes the exact trailing `-USD`, then limits the label to six characters.
+It does not strip arbitrary `-<currency>` or exchange suffixes. This is a
+temporary convention for the current USD display: `BTC-USD` and the ETF ticker
+`BTC` both render as BTC, and truncation can also produce identical labels.
+
+When adding another provider or currency support, keep the provider's instrument
+ID separate from the board label, asset type, and quote currency. Use explicit
+instrument metadata or mappings for those fields rather than inferring them
+from ticker suffixes.
+
 The rightmost board cell contains the color square. Terminal previews add a space
 before the square for readability. If the price or percentage cannot fit, the
 command reports an error without updating the board.
