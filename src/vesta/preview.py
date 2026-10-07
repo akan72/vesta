@@ -35,7 +35,7 @@ def render_preview(rows: list[list[int]], *, demo: bool = False) -> str:
                 char = escape(characters[code])
                 cells.append(f'<span class="tile">{char}</span>')
     text = escape(board_to_text(rows))
-    title = "Vesta — Demo" if demo else "Vesta"
+    title = "Board Preview — Demo" if demo else "Board Preview"
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -47,8 +47,7 @@ def render_preview(rows: list[list[int]], *, demo: bool = False) -> str:
 body {{ margin:0; min-height:100vh; background:#eeeae2; color:#252720;
  font-family:system-ui,sans-serif; padding:clamp(24px,6vw,88px); }}
 main {{ max-width:1120px; margin:auto; }}
-h1 {{ font-size:15px; font-weight:750; letter-spacing:.2em;
- text-transform:uppercase; margin:0; }}
+h1 {{ font-size:15px; font-weight:750; margin:0; }}
 .board {{ display:grid; grid-template-columns:repeat(22,minmax(0,1fr));
  gap:clamp(2px,.45vw,6px); padding:clamp(10px,2vw,26px); background:#111210;
  border-radius:12px; border:1px solid #383a33; box-shadow:0 20px 40px #25272022;
