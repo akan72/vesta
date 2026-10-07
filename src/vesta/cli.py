@@ -63,27 +63,41 @@ def main(
     preview_file: Path | None,
     demo: bool,
 ) -> None:
-    """Display daily closing prices on a Vestaboard.
+    """Display the prices of stocks and crypto on your Vestaboard!
 
-    Running without preview options sends to the board and requires
-    VESTABOARD_RW_KEY or --api-key. Preview options never send and need no key.
-    --demo skips price fetching; rate-limited previews also use labeled demo data.
+    \b
+    Sending live data to your board requires a Vestaboard API key.
+    Local preview mode doesn't require an API key. You can also preview
+    the expected output using synthetic data, which is also used if you get
+    rate limited by the market data provider.
 
     Examples:
 
     \b
       Send the default instruments:
         vesta
+
+    \b
       Send selected instruments:
         vesta --symbols BTC,SPCX,GLD,GOOG,META,VTI
+
+    \b
       Preview selected instruments in the terminal:
         vesta --dry-run --symbols AAPL,MSFT,NVDA
+
+    \b
       Open a visual preview of selected instruments:
         vesta --preview --symbols BTC,GLD,GOOG
+
+    \b
       Save an HTML preview to a path without opening a browser:
         vesta --symbols GLD,GOOG --preview-file /tmp/vesta-preview.html
+
+    \b
       Preview all six demo instruments offline:
         vesta --demo --preview
+
+    \b
       Save an offline demo preview (quote paths containing spaces):
         vesta --demo --preview-file "./board preview.html"
     """
