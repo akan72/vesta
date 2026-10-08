@@ -6,6 +6,7 @@ from pathlib import Path
 
 import click
 
+from vesta.alpaca import fetch_alpaca_prices
 from vesta.board import send_to_board
 from vesta.formatter import board_to_text, format_for_board
 from vesta.preview import write_preview
@@ -30,7 +31,16 @@ DEMO_PRICES = [
     default=",".join(DEFAULT_SYMBOLS),
     show_default=True,
     show_envvar=True,
-    help="yfinance tickers (1–6); Bitcoin: BTC-USD.",
+    help="1–6 tickers; Yahoo Bitcoin: BTC-USD; Alpaca crypto: BTC/USD.",
+)
+@click.option(
+    "--provider",
+    type=click.Choice(["yahoo", "alpaca"]),
+    default="yahoo",
+    envvar="VESTA_PROVIDER",
+    show_default=True,
+    show_envvar=True,
+    help="Market data source; Alpaca requires APCA_API_KEY_ID and APCA_API_SECRET_KEY.",
 )
 @click.option(
     "--api-key",
@@ -57,6 +67,7 @@ DEMO_PRICES = [
 )
 def main(
     symbols: str,
+    provider: str,
     api_key: str | None,
     dry_run: bool,
     preview: bool,
@@ -67,12 +78,15 @@ def main(
 
     \b
     Sending market data to your board requires a Vestaboard API key.
-    Local preview mode doesn't require an API key. You can also preview
+    Local previews don't require a Vestaboard key. You can also preview
     the expected output using synthetic data.
     Synthetic data is used automatically in local previews if the market
     data provider rate-limits you.
 
-    Symbols currently use yfinance's Yahoo Finance ticker format.
+    Yahoo uses yfinance tickers and needs no market data key.
+    Alpaca requires APCA_API_KEY_ID and APCA_API_SECRET_KEY.
+    Alpaca stocks use tickers; crypto uses USD pairs such as BTC/USD.
+    BTC-USD is accepted as a Bitcoin alias on Alpaca; BTC is an ETF.
 
     Examples:
 
@@ -97,6 +111,10 @@ def main(
         vesta --symbols GLD,GOOG --preview-file /tmp/vesta-preview.html
 
     \b
+      Preview Alpaca prices (with market data keys set):
+        vesta --provider alpaca --preview --symbols BTC/USD,SPCX,GLD,GOOG,META,VTI
+
+    \b
       Preview all six demo instruments offline:
         vesta --demo --preview
 
@@ -117,14 +135,14 @@ def main(
 
     use_demo = demo
     if not use_demo:
-        click.echo(f"Fetching daily closes for: {', '.join(symbol_list)}")
+        click.echo(f"Fetching {provider} prices for: {', '.join(symbol_list)}")
         try:
-            prices = fetch_prices(symbol_list)
+            prices = fetch_alpaca_prices(symbol_list) if provider == "alpaca" else fetch_prices(symbol_list)
         except RateLimitError as exc:
             if not preview_only:
                 raise click.ClickException(f"{exc} Board not updated.") from exc
             click.echo(
-                "Yahoo Finance rate limited the request; using demo data for this preview.",
+                f"{exc} Using demo data for this preview.",
                 err=True,
             )
             use_demo = True

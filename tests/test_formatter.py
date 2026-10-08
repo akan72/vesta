@@ -83,7 +83,7 @@ class PriceChangeColorTests(unittest.TestCase):
         ):
             result = CliRunner().invoke(main, ["--api-key", "test-only"])
         self.assertEqual(result.exit_code, 1, result.output)
-        self.assertIn("Error formatting board", result.output)
+        self.assertIn("Cannot format board", result.output)
         send.assert_not_called()
 
 
