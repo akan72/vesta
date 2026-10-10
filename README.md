@@ -1,6 +1,6 @@
 # Vesta
 
-Display equity and crypto daily closing prices on your Vestaboard, with a color
+Display equity and crypto prices on your Vestaboard, with a color
 square on the right: green for positive changes, red for negative changes, and
 black when the displayed change rounds to `0.0%`.
 
@@ -46,7 +46,7 @@ For a headless session, save the HTML without opening a browser:
 vesta --symbols GLD,GOOG --preview-file /tmp/vesta-preview.html
 ```
 
-If Yahoo Finance rate-limits a preview, Vesta automatically uses fixed BTC, SPCX,
+If either market data provider rate-limits a preview, Vesta automatically uses fixed BTC, SPCX,
 GLD, GOOG, META, and VTI sample values. Both the terminal and HTML label them as
 demo data. Other fetch failures produce an error instead of sample data.
 
@@ -88,12 +88,48 @@ vesta --symbols AAPL,MSFT,NVDA
 ```
 
 You can also supply the key with `--api-key`. A normal send fetches fresh prices;
-if Yahoo rate-limits or any quote is unavailable, Vesta exits nonzero without
+if the provider rate-limits or any quote is unavailable, Vesta exits nonzero without
 updating the board.
+
+## Market data providers
+
+Yahoo Finance remains the default, with no market data credentials required:
+
+```bash
+vesta --provider yahoo --preview --symbols BTC-USD,SPCX,GLD,GOOG,META,VTI
+```
+
+Alpaca uses its free IEX feed for stocks/ETFs and delayed five-minute bars for
+crypto. Set `APCA_API_KEY_ID` and `APCA_API_SECRET_KEY` in your environment;
+these are separate from the Vestaboard key. Do not commit credentials. Then run:
+
+```bash
+vesta --provider alpaca --preview --symbols BTC/USD,SPCX,GLD,GOOG,META,VTI
+vesta --provider alpaca --dry-run
+vesta --provider alpaca --preview-file /tmp/vesta-preview.html
+```
+
+Set `VESTA_PROVIDER=alpaca` to make Alpaca the default. `--demo` works offline
+with either provider and requires no keys. Rate limits fall back to the same
+six sample rows in local previews; sending never substitutes synthetic prices.
+
+Alpaca batches all stocks into one snapshot request and all crypto into one
+bars request, with at most two concurrent requests and no retries. A stock's
+sampled minute close is compared with its previous daily close. Crypto bars are
+explicitly delayed by 20 minutes for free historical-data access; changes compare
+with the last five-minute bar before the sampled UTC day's midnight. The free
+IEX feed covers one exchange and can differ from consolidated market prices.
+Missing, invalid or incomplete data fails the whole fetch without updating the
+board. These are sampled prices, not streaming quotes.
+
+Alpaca crypto must use USD pairs such as `BTC/USD` or `ETH/USD`. The exact alias
+`BTC-USD` is accepted as `BTC/USD`; bare `BTC` remains an equity ticker. Provider
+identifiers are passed separately from display labels, which use the pair's base
+symbol for crypto. Other Yahoo-style crypto IDs should be written as Alpaca pairs.
 
 ## Symbols and prices
 
-For now, Vesta fetches market data through `yfinance`. Inputs to `--symbols` /
+For Yahoo, Vesta fetches market data through `yfinance`. Inputs to `--symbols` /
 `-s` or `VESTA_SYMBOLS` must use Yahoo Finance ticker syntax, with one to six
 unique tickers. Defaults: `BTC-USD,GLD,GOOG`. Bitcoin is `BTC-USD`; `BTC` is
 a separate ETF ticker.
@@ -101,7 +137,7 @@ a separate ETF ticker.
 Use USD-denominated instruments; prices have a dollar sign and Vesta does
 not convert currencies or validate the quote currency returned by the provider.
 
-Quotes are the latest available adjusted daily closes and changes from the
+Yahoo quotes are the latest available adjusted daily closes and changes from the
 preceding closes, not streaming prices. Five days of history allow for
 non-trading days. Missing quotes are never displayed as fabricated zero prices.
 
@@ -111,10 +147,9 @@ It does not strip arbitrary `-<currency>` or exchange suffixes. This is a
 temporary convention for the current USD display: `BTC-USD` and the ETF ticker
 `BTC` both render as BTC, and truncation can also produce identical labels.
 
-When adding another provider or currency support, keep the provider's instrument
-ID separate from the board label, asset type, and quote currency. Use explicit
-instrument metadata or mappings for those fields rather than inferring them
-from ticker suffixes.
+The Alpaca adapter keeps input IDs separate from board labels and uses explicit
+USD-pair syntax plus the Bitcoin alias above. Neither provider converts
+non-USD Yahoo instruments into dollars.
 
 The rightmost board cell contains the color square. Terminal previews add a space
 before the square for readability. If the price or percentage cannot fit, the

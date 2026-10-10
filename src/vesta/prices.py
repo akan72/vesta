@@ -12,7 +12,7 @@ class PriceFetchError(Exception):
 
 
 class RateLimitError(PriceFetchError):
-    """Raised when Yahoo explicitly reports a rate limit."""
+    """Raised when a market data provider explicitly reports a rate limit."""
 
 
 @dataclass
