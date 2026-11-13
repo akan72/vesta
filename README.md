@@ -4,6 +4,10 @@ Display equity and crypto prices on your Vestaboard, with a color
 square on the right: green for positive changes, red for negative changes, and
 black when the displayed change rounds to `0.0%`.
 
+A white Vestaboard updating with `vesta --symbols BTC-USD,SPCX,GLD,GOOG,META,VTI`:
+
+VIDEO_URL
+
 ## Install
 
 Install with [uv](https://docs.astral.sh/uv/guides/tools/) and Python 3.10 or newer:
