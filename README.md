@@ -6,7 +6,7 @@ black when the displayed change rounds to `0.0%`.
 
 A white Vestaboard updating with `vesta --symbols BTC-USD,SPCX,GLD,GOOG,META,VTI`:
 
-VIDEO_URL
+https://github.com/user-attachments/assets/0818d907-c238-4b07-b805-db8a76f53d57
 
 ## Install
 
